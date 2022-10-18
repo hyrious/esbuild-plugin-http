@@ -1,6 +1,6 @@
 {
   "name": "@hyrious/esbuild-plugin-http",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Bundle http(s) resources on-the-fly",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
