@@ -1,4 +1,4 @@
-import type { Plugin } from "esbuild";
+import type { Loader, Plugin } from "esbuild";
 import type { Agent } from "http";
 
 import { make_regex } from "./scheme";
@@ -25,26 +25,40 @@ export function http({
   cache = new Map(),
   onfetch,
 }: HttpPluginOptions = {}): Plugin {
-  let scheme_filter: RegExp | undefined;
-  let scheme_keys = Object.keys(schemes);
-  if (scheme_keys.length > 0) {
-    scheme_filter = make_regex(scheme_keys);
-  }
-
-  let filter_func =
-    filter === undefined
-      ? function (url: string) {
-          return true;
-        }
-      : typeof filter === "function"
-      ? filter
-      : function (url: string) {
-          return filter.test(url);
-        };
-
   return {
     name: "http",
     setup({ onResolve, onLoad }) {
+      let scheme_filter: RegExp | undefined;
+      let scheme_keys = Object.keys(schemes);
+      if (scheme_keys.length > 0) {
+        scheme_filter = make_regex(scheme_keys);
+      }
+
+      let filter_func =
+        filter === undefined
+          ? function (url: string) {
+              return true;
+            }
+          : typeof filter === "function"
+          ? filter
+          : function (url: string) {
+              return filter.test(url);
+            };
+
+      let ext_to_loader: Record<string, Loader> = {
+        ".js": "js",
+        ".mjs": "js",
+        ".cjs": "js",
+        ".jsx": "jsx",
+        ".ts": "ts",
+        ".cts": "ts",
+        ".mts": "ts",
+        ".tsx": "tsx",
+        ".css": "css",
+        ".json": "json",
+        ".txt": "text",
+      };
+
       if (scheme_filter) {
         onResolve({ filter: scheme_filter }, ({ path }) => {
           // ! must can find because it has been matched by regex
@@ -75,8 +89,14 @@ export function http({
       }));
 
       onLoad({ filter: /.*/, namespace: "http-url" }, async (args) => {
+        let loader: Loader = "js";
+        let idx = args.path.lastIndexOf(".");
+        if (idx !== -1) {
+          let ext = args.path.slice(idx);
+          loader = ext_to_loader[ext] || loader;
+        }
         let contents = await fetch(args.path, agent, cache, onfetch);
-        return { contents };
+        return { contents, loader };
       });
     },
   };

@@ -72,7 +72,7 @@ if (args.path.startsWith("unpkg:")) {
 }
 ```
 
-Note that search params and hashes will be preserved to the end of the url,
+Note that search params will be preserved to the end of the url,
 which means you can write this instead:
 
 ```js
