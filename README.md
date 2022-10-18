@@ -29,6 +29,7 @@ http({
   agent: null,
   schemes: {},
   cache: new Map(),
+  onfetch: (url) => void 0,
 });
 ```
 
@@ -36,6 +37,7 @@ http({
 - `agent` {Object} The [agent](https://nodejs.org/api/http.html#http_class_http_agent) to use for HTTP requests.
 - `schemes` {Object} A map of custom schemes for shorter URL. For example, if you set it as `{ unpkg: 'https://unpkg.com/' }`, then `import "unpkg:react"` will be resolved to `https://unpkg.com/react`. More details see [schemes](#schemes).
 - `cache` {Map&lang;String,String|Uint8Array&rang;} A map of `url -> contents` which can be reused during incremental or watch builds.
+- `onfetch` {Function} A callback function that will be called before fetching each URL.
 
 ### Proxying
 
