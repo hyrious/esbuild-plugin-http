@@ -1,6 +1,7 @@
 import { fetch } from "../src/fetch";
 
 let cache = new Map();
-let content = await fetch("https://esm.sh/react", null, cache);
+await fetch("https://cdn.jsdelivr.net/npm/react@18.2.0/index.js", null, cache);
 
-console.log(cache, new TextDecoder().decode(content as Uint8Array));
+// JsDelivr has 304 cache, it should be very fast in the second try
+console.log(cache);

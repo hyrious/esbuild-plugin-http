@@ -145,6 +145,12 @@ This way, you can directly import this package from a global module (like the
 When you're done, run `npm r -g @hyrious/esbuild-plugin-http` to remove it from
 the global node_modules.
 
+## Changelog
+
+### 0.1.2
+
+Use [make-fetch-happen](https://github.com/npm/make-fetch-happen) to make HTTP cache happy.
+
 ## License
 
 MIT @ [hyrious](https://github.com/hyrious)
