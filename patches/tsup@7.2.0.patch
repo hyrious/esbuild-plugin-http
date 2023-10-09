@@ -1,0 +1,22 @@
+diff --git a/dist/index.js b/dist/index.js
+index 68c197cb2b8dfa928a448475b4020e7301da959e..a3842f4122032ced7f6f9d3c06b35f168246ce50 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -2075,7 +2075,7 @@ var treeShakingPlugin = ({
+             },
+             load(id) {
+               if (id === info.path)
+-                return code;
++                return { code, map: info.map };
+             }
+           }
+         ],
+@@ -2089,7 +2089,7 @@ var treeShakingPlugin = ({
+         interop: "auto",
+         format: this.format,
+         file: "out.js",
+-        sourcemap: !!this.options.sourcemap,
++        sourcemap: this.options.sourcemap ? 'hidden' : false,
+         name
+       });
+       for (const file of result.output) {
