@@ -2,4 +2,4 @@
 // @ts-ignore
 import { observable } from "https://cdn.jsdelivr.net/npm/@hyrious/utils@0.0.6/src/emitter.ts";
 
-console.log(observable);
+console.log(observable.toString());

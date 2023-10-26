@@ -1,4 +1,4 @@
-import type { Loader, Plugin } from "esbuild";
+import type { Plugin } from "esbuild";
 import type { Agent } from "http";
 
 import { make_regex } from "./scheme";
@@ -45,20 +45,6 @@ export function http({
               return filter.test(url);
             };
 
-      let ext_to_loader: Record<string, Loader> = {
-        ".js": "js",
-        ".mjs": "js",
-        ".cjs": "js",
-        ".jsx": "jsx",
-        ".ts": "ts",
-        ".cts": "ts",
-        ".mts": "ts",
-        ".tsx": "tsx",
-        ".css": "css",
-        ".json": "json",
-        ".txt": "text",
-      };
-
       if (scheme_filter) {
         onResolve({ filter: scheme_filter }, ({ path }) => {
           // ! must can find because it has been matched by regex
@@ -89,14 +75,8 @@ export function http({
       }));
 
       onLoad({ filter: /.*/, namespace: "http-url" }, async (args) => {
-        let loader: Loader = "js";
-        let idx = args.path.lastIndexOf(".");
-        if (idx !== -1) {
-          let ext = args.path.slice(idx);
-          loader = ext_to_loader[ext] || loader;
-        }
         let contents = await fetch(args.path, agent, cache, onfetch);
-        return { contents, loader };
+        return { contents, loader: "default" };
       });
     },
   };
