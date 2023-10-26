@@ -1,8 +1,9 @@
-import type { Plugin } from "esbuild";
+import type { OnLoadArgs, OnLoadResult, Plugin } from "esbuild";
 import type { Agent } from "http";
 
 import { make_regex } from "./scheme";
-import { fetch } from "./fetch";
+import { Response, fetch } from "./fetch";
+import { FetchOptions } from "make-fetch-happen";
 
 export interface HttpPluginOptions {
   /** Return `true` to filter in paths to be handled by this plugin. */
@@ -15,6 +16,30 @@ export interface HttpPluginOptions {
   cache?: Map<string, string | Uint8Array>;
   /** onfetch(console.log) */
   onfetch?: (url: string) => void;
+  /** Passed to `make-fetch-happen`, the `cachePath` and `agent` is already set. */
+  fetchOptions?: FetchOptions;
+  /**
+   * Custom load result, the `contents` is the fetched data.
+   *
+   * By default this plugin passes `loader: 'default'` to esbuild, which means
+   * it relies on a correct file extension to determine the loader.
+   *
+   * If in any cases you find the file extension is wrong or missing, you can
+   * set this option to override the default behavior.
+   * ```js
+   * onload(url, contents) {
+   *   return { contents, loader: 'default' }
+   * }
+   * ```
+   * Advanced usage:
+   * ```js
+   * onload(url, contents, args, response) {
+   *   // if fetched from cache, the `response` will be null.
+   * }
+   * ```
+   */
+  onload?: (url: string, contents: string | Uint8Array, args: OnLoadArgs, response: Response | null) =>
+    OnLoadResult | Promise<OnLoadResult | null | undefined> | null | undefined;
 }
 
 /** https://esbuild.github.io/plugins/#http-plugin */
@@ -24,6 +49,8 @@ export function http({
   schemes = {},
   cache = new Map(),
   onfetch,
+  fetchOptions,
+  onload,
 }: HttpPluginOptions = {}): Plugin {
   return {
     name: "http",
@@ -75,8 +102,14 @@ export function http({
       }));
 
       onLoad({ filter: /.*/, namespace: "http-url" }, async (args) => {
-        let contents = await fetch(args.path, agent, cache, onfetch);
-        return { contents, loader: "default" };
+        const { body, response } = await fetch(args.path, agent, cache, fetchOptions, onfetch);
+        if (onload) {
+          const result = await onload(args.path, body, args, response);
+          if (result) {
+            return result;
+          }
+        }
+        return { contents: body, loader: "default" };
       });
     },
   };

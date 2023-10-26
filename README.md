@@ -30,6 +30,8 @@ http({
   schemes: {},
   cache: new Map(),
   onfetch: (url) => void 0,
+  fetchOptions: {},
+  onload: () => void 0,
 });
 ```
 
@@ -38,6 +40,8 @@ http({
 - `schemes` {Object} A map of custom schemes for shorter URL. For example, if you set it as `{ unpkg: 'https://unpkg.com/' }`, then `import "unpkg:react"` will be resolved to `https://unpkg.com/react`. More details see [schemes](#schemes).
 - `cache` {Map&lang;String,String|Uint8Array&rang;} A map of `url -> contents` which can be reused during incremental or watch builds.
 - `onfetch` {Function} A callback function that will be called before fetching each URL.
+- `fetchOptions` {Object} Options passed to [`make-fetch-happen`](https://github.com/npm/make-fetch-happen).
+- `onload` {Function} A callback function to customize the `onLoad` hooks of esbuild.
 
 ### Proxying
 
@@ -135,6 +139,31 @@ import "esm:react";
 import "https://esm.sh/react";
 ```
 
+### Custom Loader
+
+By default this plugin uses `loader: "default"` in the `onLoad` hooks of esbuild,
+which means it relies on the url to have a correct file extension to determine
+the loader. If you want to use a custom loader, you can either use the
+[`loader`](https://esbuild.github.io/api/#loader) option in esbuild for static extensions,
+or use the `onload` option in this plugin to handle it by yourself.
+
+```js
+http({
+  onload(url, contents) {
+    if (!extname(url) && is_env_node(contents)) {
+      return { contents, loader: 'js' }
+    }
+  }
+})
+
+function is_env_node(a) {
+  if (typeof a === 'string')
+    return a.startsWith('#!/usr/bin/env node')
+  if (Object.prototype.toString.call(a) === '[object Uint8Array]') 
+    return is_env_node(new TextDecoder().decode(a.subarray(0, 20)))
+}
+```
+
 ## Develop
 
 Run [`npm link`](https://docs.npmjs.com/cli/v8/commands/npm-link) at
@@ -146,6 +175,10 @@ When you're done, run `npm r -g @hyrious/esbuild-plugin-http` to remove it from
 the global node_modules.
 
 ## Changelog
+
+### 0.1.5
+
+Add `fetchOptions` and `onload` options.
 
 ### 0.1.2
 
